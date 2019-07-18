@@ -1,0 +1,36 @@
+language: go
+sudo: required
+go:
+- 1.12.x
+addons:
+  sonarcloud:
+    organization: paysuper
+stages:
+- test
+- name: deploy
+  if: branch = master
+jobs:
+  include:
+  - stage: test
+    install: true
+    script:
+    - go test ./... -coverprofile=coverage.out -covermode=atomic -p=1
+    after_success:
+    - bash <(curl -s https://codecov.io/bash)
+  - stage: deploy
+    services: docker
+    install: true
+    script:
+    - docker run -it -e JENKINS_AUTH_TOKEN=$JENKINS_AUTH_TOKEN -e JENKINS_BUILD_TOKEN=$JENKINS_BUILD_TOKEN
+      -e JENKINS_BUILD_PROJECT=$TRAVIS_REPO_SLUG -e JENKINS_BUILD_BRANCH=$TRAVIS_BRANCH
+      p1hub/p1jenkinstrigger
+notifications:
+  email: false
+  slack:
+    secure: b0jJIiQ0QXF2T3Pr/AZ8zZtmivmSKbYaTMuRbw0F4KRNmILPtCKYUK1sIHmwYmAC0INtuLIFWSqWKyMpGdIg+v2HGWohpKpxmOQeJWgMbxxDtS5jMIHloqNtsAuyMg8ILWT4aDoMF+0Rj/t9TnML92QnYUguBzH309BAMapOO6LiBAEOf0CLFafc7Fa+bsPijqQ7JaAT9xY59qD7Qi/mZ6N5wmDzBKfUA5D+uk29elONoaLoZhJLNg9hDRYf/BkKdn3wLDFuQ7O+j9NNXcPz4MpRxQyFoGqvKHQ+2fPf/zQRWYKUlO8n5eG6ntPA7kdMF2sa/06NIJUmySzDGJlarnVSdKU/vez+fNCD+NGu4pPSLX4qqY/th3SSszhJN9/x3S2YMCJtQDLSLBnhnOX6WNsaOFsCQwx1317YZs4OiZO1/IDLbDhrwkoQfHBLTwlYrusA+g0ErFlOB8yGXyFvksiwwXZL4CMLbfJT1/jpEV+M4Y6YiHxIPpqxmhjuwcF0fN47D8TZ7xq1NG9kj8QAgwbQr9bICnWtR+2SHr5YxgW3RlqacI2e4TVbU0+/6qwU3W5BEznkwDQzxK1ds8H3GnQkxVBCfTrY/F60ask8uwqt4NLCpHEjb6FcfZZCQgTfh86Ooc2E6QqKZGkcrhOqLxy7XoJ8hjfUUsRnTdoWPko=
+env:
+  global:
+  - GO111MODULE=on
+  - secure: JShGK/19En+jW+WcHONn6hOf/vuBYJhH2bgvK8gxPl2jpQETjzjb4AHxRrOUvGoTudp0Ucdr3rgutBxNWgaAelVKrGB/wMW9bB6PSjHWSFfHkWWHCXgN/OIsYC3QJsd7n71KTbXXFhLrYp/jygD3Cmpp2Rtdx9QFVR189dKd9IA12BCnRi5jv7fw3Qdd6ldyZTJ8+BRpFp71x/dTO27le0K/CSdLuJ/casIsSkag3p03vUjdn/uG+DWlVeQBHmW6ZdJ3lVnHoBt1oXhg9GPVYefSdZnca2iPHNhUIjoXIC+3lEaw/2DimAU9rGXogbeeAyX4pLgDC+N2BC9MxHl/NCTbyECaDD4ZXn/d8pDUiBKUi68/eZxClR1Pf8xiLubXcFO3TU99oA7yLZ0dO3p0t7c0cyjKf7KOEAoyyrkuRIe0vtzX3IUQ8L5OP9KJ7WyjQibENylAJHhuoqPMKAH1/CmqmuXlc2t28uBhCgYUcu7sPoxCCDTx0dwyunmS4TkGpVulSDnPDUlGiKysWik8Y7UpKoT96CC89Wf5t7Al5cMn/FjFQtAwwGRlCYAToDnj17ShbupwraFpr0kc92sEnxyMlkrSLGXE4YO7bYyGwKi0NJ8ajNQKWHvDkAgUabqixdhHgdK4Te9gGl97abraAAiIAquf7cU/3KHIcK/Aqy8=
+  - secure: gP1sBb0FPHmDCZBS4cAOw7XHa8cpxvolAnZ5B2a9+1a7yoYL/++2uEVbfLEsvNjtZSIlJ6zO5FVAMzvMgNveRng9kxYEIksixNV0FVzYJtYO5/utAR8xkDm75MXVvVm2Zy3Empgi6I/UZKzzLRpc6R3ybb7lFEPr4J/PbYIODpLF1j0kFlR/jWe49XbfeWyadbBEeqtMSDYM85HvcfqmE1CnG1sdMu+LvWVk6yjIsOT1SqYPOh9GWsJ8YOojqGYkE+km9T4T7u0xqg7fkEgKF6qAlA+sllehiCIcdwNsBX/hGYNbJ0V6cMPbuiR1vv6oymGrgiByNZZy8JdwqMl9YPZGg2KBtIi0LdSe4vi+5d4xDoTEBTsqKlyo2l2iBkwHBubUE93ytyJ4XOayEvKCelZjql+S7v9UHGMYhIz1iMlOn09Cxo7yXHkZkTA+XmtmjNqRXS8L2YovJ9+GK3XOFTsOZeXG9uF+evwB/pKoRePkGxiIAHIZdaDkVufUpDk9n8iNvYDiBBY1tAhm4m8QSOZ+Y/XTUCoLurcYBuKEJC7HmR6X+8gT9v9ei/lPfhsLJjjYACH5dx17CFPvD0nU50ih5MYGYhN4B21Z+5wna9hJRRwG+CMADo5Q5T6Fi+ARd8uv5iC5wXawdIkQi67z8p3NBCW08tVc94I/ap/VoqA=
+  - secure: hhNlyrT+LlPRPuJKrcqREukWg3rjMepwOXPdoZuCkmRYeN84CBhVBXdggukNF3Ismxkopivf+s5l9GCAvSlClTWQOUn7jRIkfXoEXverfJYMwmJTruoCKRdwwPpEMv1iK9DXK4u4XdxBMOQfutVgRsbMpFunG2gDS+0c5tKwgM9y98NIkZysS+2Q3QZHIIzslDlQtSiKvJg+vVxEuj+PO86+UwZFxjN+9PoP8PzkkayG+ymtxlOfw5/5lPAFsRJSKlNvgS/vz+XsioRiKUs4nmUVRvHkwpuEj8ONIBpG6tTO6d6/TdGzL1fI5Txx5HB6YbbVB1hUsWq65atRw5TOnR7W4pKbmkc7JCJibeXeeSSRYpkoIxwEnrDPRaTjJQjlOWHlLJWys7c2ujxTzGuLD6g0ciVh8jmR6D8kG++Sz5H1ehspFgRkdQgrPwt/1llAHugQsXIOkpz1t8HVwbxMT0/7G4QlITWWTdxWL5GMzps2hYiNdf4F7o1nwx9aHhUc7AOdvHpU9Wgq7/5SDgfz0yAqFC8DWHTzTJLzxG6efeZMTbAoahON6Zd9cU4iKhnICQUvsFZMcE+hokygbtN3aQVbNGvIVO932RzFfUBV6yrEflhf+Ir/KNptD/K4EXTiaQ1ve5t8KJM8ign+0tvpPpa092JpfGoMAA+biQSAp80=
