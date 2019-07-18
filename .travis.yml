@@ -2,6 +2,7 @@ language: go
 sudo: required
 go:
 - 1.12.x
+dist: trusty
 addons:
   sonarcloud:
     organization: paysuper
@@ -12,6 +13,8 @@ stages:
 jobs:
   include:
   - stage: test
+    services:
+      - rabbitmq
     install: true
     script:
     - go test ./... -coverprofile=coverage.out -covermode=atomic -p=1
