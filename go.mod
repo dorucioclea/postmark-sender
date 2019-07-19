@@ -11,5 +11,5 @@ require (
 	github.com/stretchr/testify v1.3.0
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/zap v1.10.0
-	gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20190717210852-1e682aab3763
+	gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20190719062839-9858d727f3ef
 )

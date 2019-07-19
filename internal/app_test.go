@@ -2,7 +2,6 @@ package internal
 
 import (
 	"github.com/paysuper/paysuper-billing-server/pkg/proto/grpc"
-	"github.com/paysuper/paysuper-recurring-repository/tools"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/internal/mock"
 	"github.com/streadway/amqp"
@@ -43,7 +42,7 @@ func (suite *ApplicationTestSuite) SetupTest() {
 
 	suite.app.cfg = cfg
 	suite.app.broker = mock.NewBrokerMockOk()
-	suite.app.httpClient = tools.NewLoggedHttpClient(zap.S())
+	suite.app.httpClient = mock.NewClientStatusOk()
 
 	var core zapcore.Core
 
@@ -64,10 +63,21 @@ func (suite *ApplicationTestSuite) TestApplication_InitBroker_Ok() {
 func (suite *ApplicationTestSuite) TestApplication_InitBroker_NewBroker_Error() {
 	suite.app.fatalFn = zap.L().Info
 	suite.app.cfg.BrokerAddress = ""
+	suite.app.broker = nil
 
 	suite.app.initBroker()
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Creating RabbitMq broker failed", messages[0].Message)
+}
+
+func (suite *ApplicationTestSuite) TestApplication_InitBroker_RegisterSubscriber_Error() {
+	suite.app.fatalFn = zap.L().Info
+	suite.app.cfg.BrokerAddress = ""
+	suite.app.broker = mock.NewBrokerMockError()
+
+	suite.app.initBroker()
+	messages := suite.zapRecorder.All()
+	assert.Equal(suite.T(), "Registration RabbitMQ broker handler failed", messages[0].Message)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_InitConfig_Ok() {
@@ -185,7 +195,7 @@ func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_SendEmail
 		},
 	}
 
-	suite.app.cfg.PostmarkApiUrl = ""
+	suite.app.httpClient = mock.NewTransportHttpError()
 
 	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
 	assert.Error(suite.T(), err)

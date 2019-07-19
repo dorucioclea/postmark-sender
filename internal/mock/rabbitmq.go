@@ -29,8 +29,12 @@ func (b *BrokerMockOk) Publish(topic string, msg proto.Message, h amqp.Table) er
 	return nil
 }
 
+func (b *BrokerMockOk) SetExchangeName(name string) {
+	return
+}
+
 func (b *BrokerMockError) RegisterSubscriber(topic string, fn interface{}) error {
-	return nil
+	return SomeError
 }
 
 func (b *BrokerMockError) Subscribe(exit chan bool) error {
@@ -39,4 +43,8 @@ func (b *BrokerMockError) Subscribe(exit chan bool) error {
 
 func (b *BrokerMockError) Publish(topic string, msg proto.Message, h amqp.Table) error {
 	return nil
+}
+
+func (b *BrokerMockError) SetExchangeName(name string) {
+	return
 }

@@ -87,25 +87,26 @@ func (app *Application) initConfig() {
 }
 
 func (app *Application) initBroker() {
-	b, err := rabbitmq.NewBroker(app.cfg.BrokerAddress)
+	var err error
 
-	if err != nil {
-		app.fatalFn(
-			"Creating RabbitMq broker failed",
-			zap.Error(err),
-			zap.String("url", app.cfg.BrokerAddress),
-		)
+	if app.broker == nil {
+		app.broker, err = rabbitmq.NewBroker(app.cfg.BrokerAddress)
+
+		if err != nil {
+			app.fatalFn(
+				"Creating RabbitMq broker failed",
+				zap.Error(err),
+				zap.String("url", app.cfg.BrokerAddress),
+			)
+		}
 	}
 
-	broker := b.(*rabbitmq.Broker)
-	broker.Opts.ExchangeOpts.Name = pkg.PostmarkSenderTopicName
-	err = broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailConfirmProcess)
+	app.broker.SetExchangeName(pkg.PostmarkSenderTopicName)
+	err = app.broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailConfirmProcess)
 
 	if err != nil {
 		app.fatalFn("Registration RabbitMQ broker handler failed", zap.Error(err))
 	}
-
-	app.broker = broker
 
 	zap.L().Info("Broker created...")
 }

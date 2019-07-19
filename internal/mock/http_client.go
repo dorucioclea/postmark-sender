@@ -14,6 +14,14 @@ var (
 
 type IoReaderError struct{}
 
+type TransportStatusOk struct {
+	Transport http.RoundTripper
+}
+
+type TransportHttpError struct {
+	Transport http.RoundTripper
+}
+
 type TransportStatusIncorrectResponse struct {
 	Transport http.RoundTripper
 }
@@ -24,6 +32,18 @@ type TransportStatusBadStatus struct {
 
 type TransportStatusErrorIoReader struct {
 	Transport http.RoundTripper
+}
+
+func NewClientStatusOk() *http.Client {
+	return &http.Client{
+		Transport: &TransportStatusOk{},
+	}
+}
+
+func NewTransportHttpError() *http.Client {
+	return &http.Client{
+		Transport: &TransportHttpError{},
+	}
 }
 
 func NewClientStatusIncorrectResponse() *http.Client {
@@ -46,6 +66,18 @@ func NewClientStatusBadStatus() *http.Client {
 
 func NewIoReaderError() io.Reader {
 	return &IoReaderError{}
+}
+
+func (h *TransportStatusOk) RoundTrip(req *http.Request) (*http.Response, error) {
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       ioutil.NopCloser(strings.NewReader(`{"ErrorCode": 0, "Message": "Ok"}`)),
+		Header:     make(http.Header),
+	}, nil
+}
+
+func (h *TransportHttpError) RoundTrip(req *http.Request) (*http.Response, error) {
+	return nil, SomeError
 }
 
 func (h *TransportStatusIncorrectResponse) RoundTrip(req *http.Request) (*http.Response, error) {
