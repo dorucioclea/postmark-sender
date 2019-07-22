@@ -128,10 +128,8 @@ func (app *Application) Stop() {
 }
 
 func (app *Application) emailConfirmProcess(profile *grpc.UserProfile, d amqp.Delivery) error {
-	name := profile.Personal.FirstName + " " + profile.Personal.LastName
 	placeholders := map[string]string{
-		pkg.TemplateParamPersonName: name,
-		pkg.TemplateParamUrl:        profile.Email.ConfirmationUrl,
+		pkg.TemplateParamUrl: profile.Email.ConfirmationUrl,
 	}
 
 	return app.sendEmail(profile.Email.Email, app.cfg.PostmarkTemplateConfirmEmail, placeholders)
