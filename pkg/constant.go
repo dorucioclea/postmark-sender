@@ -8,4 +8,6 @@ const (
 	HeaderXPostmarkServerToken = "X-Postmark-Server-Token"
 
 	MIMEApplicationJSON = "application/json"
+
+	PostMarkErrorCodeSuccess = 0
 )

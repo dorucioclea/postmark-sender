@@ -39,15 +39,15 @@ type PostmarkResponse struct {
 }
 
 func NewApplication() *Application {
-	return &Application{}
-}
+	app := &Application{}
 
-func (app *Application) Init() {
 	app.initLogger()
 	app.initConfig()
 	app.initBroker()
 
 	app.httpClient = tools.NewLoggedHttpClient(zap.S())
+
+	return app
 }
 
 func (app *Application) initLogger() {
@@ -173,7 +173,7 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 	}
 
 	b, err = ioutil.ReadAll(rsp.Body)
-	defer rsp.Body.Close()
+	_ = rsp.Body.Close()
 
 	if err != nil {
 		zap.L().Error(
@@ -212,5 +212,5 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 }
 
 func (m *PostmarkResponse) IsSuccess() bool {
-	return m.ErrorCode == 0
+	return m.ErrorCode == pkg.PostMarkErrorCodeSuccess
 }
