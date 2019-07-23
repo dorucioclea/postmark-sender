@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/internal/mock"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
@@ -10,8 +9,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-	rabbitmq "gopkg.in/ProtocolONE/rabbitmq.v1/pkg"
-	"net/http"
 	"os"
 	"testing"
 )
@@ -29,18 +26,11 @@ func Test_Application(t *testing.T) {
 func (suite *ApplicationTestSuite) SetupTest() {
 	suite.app = NewApplication()
 	assert.NotNil(suite.T(), suite.app)
-	assert.Nil(suite.T(), suite.app.cfg)
-	assert.Nil(suite.T(), suite.app.log)
-	assert.Nil(suite.T(), suite.app.broker)
-	assert.Nil(suite.T(), suite.app.httpClient)
+	assert.NotNil(suite.T(), suite.app.cfg)
+	assert.NotNil(suite.T(), suite.app.log)
+	assert.NotNil(suite.T(), suite.app.broker)
+	assert.NotNil(suite.T(), suite.app.httpClient)
 
-	cfg, err := config.NewConfig()
-
-	if err != nil {
-		suite.FailNow("Config load failed", "%v", err)
-	}
-
-	suite.app.cfg = cfg
 	suite.app.broker = mock.NewBrokerMockOk()
 	suite.app.httpClient = mock.NewClientStatusOk()
 
@@ -99,35 +89,6 @@ func (suite *ApplicationTestSuite) TestApplication_InitConfig_Error() {
 
 	err = os.Setenv("POSTMARK_EMAIL_FROM", v)
 	assert.NoError(suite.T(), err)
-}
-
-func (suite *ApplicationTestSuite) TestApplication_InitLogger_Ok() {
-	app := NewApplication()
-	assert.Nil(suite.T(), app.log)
-
-	app.initLogger()
-	assert.NotNil(suite.T(), app.log)
-	assert.IsType(suite.T(), &zap.Logger{}, app.log)
-}
-
-func (suite *ApplicationTestSuite) TestApplication_Init_Ok() {
-	app := NewApplication()
-	assert.Nil(suite.T(), app.log)
-	assert.Nil(suite.T(), app.cfg)
-	assert.Nil(suite.T(), app.broker)
-	assert.Nil(suite.T(), app.httpClient)
-	assert.Nil(suite.T(), app.fatalFn)
-
-	app.Init()
-	assert.NotNil(suite.T(), app.log)
-	assert.IsType(suite.T(), &zap.Logger{}, app.log)
-	assert.NotNil(suite.T(), app.cfg)
-	assert.IsType(suite.T(), &config.Config{}, app.cfg)
-	assert.NotNil(suite.T(), app.broker)
-	assert.Implements(suite.T(), (*rabbitmq.BrokerInterface)(nil), app.broker)
-	assert.NotNil(suite.T(), app.httpClient)
-	assert.IsType(suite.T(), &http.Client{}, app.httpClient)
-	assert.NotNil(suite.T(), app.fatalFn)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_Run_Ok() {
