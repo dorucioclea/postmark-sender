@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/paysuper/paysuper-billing-server/pkg/proto/grpc"
 	"github.com/paysuper/paysuper-recurring-repository/tools"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/pkg"
@@ -19,7 +18,6 @@ import (
 const (
 	loggerName = "PAYSUPER_POSTMARK_SENDER"
 
-	logParameterTemplate = "template"
 	logParameterRequest  = "request"
 	logParameterResponse = "response"
 
@@ -33,13 +31,6 @@ type Application struct {
 	httpClient *http.Client
 
 	fatalFn func(msg string, fields ...zap.Field)
-}
-
-type PostmarkRequest struct {
-	From          string            `json:"From"`
-	To            string            `json:"To"`
-	TemplateAlias string            `json:"TemplateAlias"`
-	TemplateModel map[string]string `json:"TemplateModel"`
 }
 
 type PostmarkResponse struct {
@@ -102,7 +93,7 @@ func (app *Application) initBroker() {
 	}
 
 	app.broker.SetExchangeName(pkg.PostmarkSenderTopicName)
-	err = app.broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailConfirmProcess)
+	err = app.broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailProcess)
 
 	if err != nil {
 		app.fatalFn("Registration RabbitMQ broker handler failed", zap.Error(err))
@@ -127,30 +118,39 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) emailConfirmProcess(profile *grpc.UserProfile, d amqp.Delivery) error {
-	placeholders := map[string]string{
-		pkg.TemplateParamUrl: profile.Email.ConfirmationUrl,
+func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) error {
+	if payload.From == "" {
+		payload.From = app.cfg.PostmarkEmailFrom
 	}
 
-	return app.sendEmail(profile.Email.Email, app.cfg.PostmarkTemplateConfirmEmail, placeholders)
+	if payload.Cc == "" && app.cfg.PostmarkEmailCc != "" {
+		payload.Cc = app.cfg.PostmarkEmailCc
+	}
+
+	if payload.Bcc == "" && app.cfg.PostmarkEmailBcc != "" {
+		payload.Bcc = app.cfg.PostmarkEmailBcc
+	}
+
+	if payload.TrackOpens != app.cfg.PostmarkEmailTrackOpens {
+		payload.TrackOpens = app.cfg.PostmarkEmailTrackOpens
+	}
+
+	if payload.TrackLinks != app.cfg.PostmarkEmailTrackTrackLinks {
+		payload.TrackLinks = app.cfg.PostmarkEmailTrackTrackLinks
+	}
+
+	return app.sendEmail(payload)
 }
 
-func (app *Application) sendEmail(to, template string, placeholders map[string]string) error {
-	data := &PostmarkRequest{
-		From:          app.cfg.PostmarkEmailSender,
-		To:            to,
-		TemplateAlias: template,
-		TemplateModel: placeholders,
-	}
-	b, _ := json.Marshal(data)
-
+func (app *Application) sendEmail(payload *pkg.Payload) error {
+	b, _ := json.Marshal(payload)
 	req, err := http.NewRequest(http.MethodPost, app.cfg.PostmarkApiUrl, bytes.NewBuffer(b))
 
 	if err != nil {
 		zap.L().Error(
 			"Creating http request failed",
 			zap.Error(err),
-			zap.String(logParameterTemplate, template),
+			zap.Any(logParameterRequest, payload),
 		)
 
 		return err
@@ -166,21 +166,20 @@ func (app *Application) sendEmail(to, template string, placeholders map[string]s
 		zap.L().Error(
 			"Send email failed",
 			zap.Error(err),
-			zap.String(logParameterTemplate, template),
-			zap.Any(logParameterRequest, placeholders),
+			zap.Any(logParameterRequest, payload),
 		)
 
 		return err
 	}
 
 	b, err = ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
 
 	if err != nil {
 		zap.L().Error(
 			"Reading response body failed",
 			zap.Error(err),
-			zap.String(logParameterTemplate, template),
-			zap.Any(logParameterRequest, data),
+			zap.Any(logParameterRequest, payload),
 		)
 
 		return err
@@ -192,8 +191,7 @@ func (app *Application) sendEmail(to, template string, placeholders map[string]s
 	if err != nil {
 		zap.L().Error(
 			"Incorrect json response",
-			zap.String(logParameterTemplate, template),
-			zap.Any(logParameterRequest, data),
+			zap.Any(logParameterRequest, payload),
 			zap.ByteString(logParameterResponse, b),
 		)
 
@@ -203,8 +201,7 @@ func (app *Application) sendEmail(to, template string, placeholders map[string]s
 	if rsp.StatusCode != http.StatusOK || msg.IsSuccess() == false {
 		zap.L().Error(
 			errorBadResponse,
-			zap.String(logParameterTemplate, template),
-			zap.Any(logParameterRequest, data),
+			zap.Any(logParameterRequest, payload),
 			zap.Any(logParameterResponse, msg),
 		)
 

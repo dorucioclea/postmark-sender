@@ -8,7 +8,4 @@ const (
 	HeaderXPostmarkServerToken = "X-Postmark-Server-Token"
 
 	MIMEApplicationJSON = "application/json"
-
-	TemplateParamPersonName = "person_name"
-	TemplateParamUrl        = "url"
 )

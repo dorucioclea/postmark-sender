@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"github.com/paysuper/paysuper-billing-server/pkg/proto/grpc"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/internal/mock"
+	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -87,8 +87,8 @@ func (suite *ApplicationTestSuite) TestApplication_InitConfig_Ok() {
 }
 
 func (suite *ApplicationTestSuite) TestApplication_InitConfig_Error() {
-	v := os.Getenv("POSTMARK_EMAIL_SENDER")
-	err := os.Unsetenv("POSTMARK_EMAIL_SENDER")
+	v := os.Getenv("POSTMARK_EMAIL_FROM")
+	err := os.Unsetenv("POSTMARK_EMAIL_FROM")
 	assert.NoError(suite.T(), err)
 
 	suite.app.fatalFn = zap.L().Info
@@ -97,7 +97,7 @@ func (suite *ApplicationTestSuite) TestApplication_InitConfig_Error() {
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Config init failed", messages[0].Message)
 
-	err = os.Setenv("POSTMARK_EMAIL_SENDER", v)
+	err = os.Setenv("POSTMARK_EMAIL_FROM", v)
 	assert.NoError(suite.T(), err)
 }
 
@@ -146,121 +146,79 @@ func (suite *ApplicationTestSuite) TestApplication_Run_Subscribe_Error() {
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_Ok() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.NoError(suite.T(), err)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_CreatingHttpRequestError() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
 	suite.app.cfg.PostmarkApiUrl = "\n"
 
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.Error(suite.T(), err)
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Creating http request failed", messages[0].Message)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_SendEmailFailedError() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
 	suite.app.httpClient = mock.NewTransportHttpError()
 
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.Error(suite.T(), err)
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Send email failed", messages[0].Message)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_ReadingResponseBodyError() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
 	suite.app.httpClient = mock.NewClientStatusErrorIoReader()
 
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.Error(suite.T(), err)
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Reading response body failed", messages[0].Message)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_IncorrectJsonResponseError() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
-
 	suite.app.httpClient = mock.NewClientStatusIncorrectResponse()
 
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.Error(suite.T(), err)
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), "Incorrect json response", messages[0].Message)
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_BadResponseStatusError() {
-	profile := &grpc.UserProfile{
-		Email: &grpc.UserProfileEmail{
-			Email:           "dmitriy.sinichkin@protocol.one",
-			ConfirmationUrl: "http://localhost?token=123456",
-		},
-		Personal: &grpc.UserProfilePersonal{
-			FirstName: "Unit test",
-			LastName:  "Unit Test",
-			Position:  "test",
-		},
+	payload := &pkg.Payload{
+		TemplateAlias: "template1",
+		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
 	suite.app.httpClient = mock.NewClientStatusBadStatus()
 
-	err := suite.app.emailConfirmProcess(profile, amqp.Delivery{})
+	err := suite.app.emailProcess(payload, amqp.Delivery{})
 	assert.Error(suite.T(), err)
 	messages := suite.zapRecorder.All()
 	assert.Equal(suite.T(), errorBadResponse, messages[0].Message)
