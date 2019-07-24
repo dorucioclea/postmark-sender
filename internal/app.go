@@ -143,7 +143,18 @@ func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) erro
 }
 
 func (app *Application) sendEmail(payload *pkg.Payload) error {
-	b, _ := json.Marshal(payload)
+	b, err := json.Marshal(payload)
+
+	if err != nil {
+		zap.L().Error(
+			"Email payload marshaling failed",
+			zap.Error(err),
+			zap.Any(logParameterRequest, payload),
+		)
+
+		return err
+	}
+
 	req, err := http.NewRequest(http.MethodPost, app.cfg.PostmarkApiUrl, bytes.NewBuffer(b))
 
 	if err != nil {
