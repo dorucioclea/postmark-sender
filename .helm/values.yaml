@@ -1,0 +1,47 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+enableCertIssuer: false
+
+certIssuer:
+  email: admin@protocol.one
+
+backend:
+  name: postmarksender
+  role: postmarksender
+  image: "p1hub/postmarksender"
+  imageTag: latest
+  port: 8080
+  healthPort: 8081
+  replicas: 1
+  service: 
+    type: ClusterIP
+    port: 8080
+    protocol: TCP
+  env:
+    - BROKER_ADDRESS
+    - POSTMARK_API_URL
+    - POSTMARK_API_TOKEN
+    - POSTMARK_EMAIL_FROM
+    - POSTMARK_EMAIL_CC
+    - POSTMARK_EMAIL_BCC
+    - POSTMARK_EMAIL_TRACK_OPENS
+    - POSTMARK_EMAIL_TRACK_LINKS
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
