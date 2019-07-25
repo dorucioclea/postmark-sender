@@ -2,9 +2,9 @@ package internal
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
-	"github.com/paysuper/paysuper-recurring-repository/tools"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -38,6 +39,14 @@ type PostmarkResponse struct {
 	Message   string `json:"Message"`
 }
 
+type postmarkHttpTransport struct {
+	Transport http.RoundTripper
+}
+
+type postmarkContextKey struct {
+	name string
+}
+
 func NewApplication() *Application {
 	app := &Application{}
 
@@ -45,9 +54,13 @@ func NewApplication() *Application {
 	app.initConfig()
 	app.initBroker()
 
-	app.httpClient = tools.NewLoggedHttpClient(zap.S())
+	app.httpClient = NewHttpClient()
 
 	return app
+}
+
+func NewHttpClient() *http.Client {
+	return &http.Client{Transport: &postmarkHttpTransport{}}
 }
 
 func (app *Application) initLogger() {
@@ -224,4 +237,47 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 
 func (m *PostmarkResponse) IsSuccess() bool {
 	return m.ErrorCode == pkg.PostMarkErrorCodeSuccess
+}
+
+func (t *postmarkHttpTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	ctx := context.WithValue(req.Context(), &postmarkContextKey{name: "PostmarkRequestStart"}, time.Now())
+	req = req.WithContext(ctx)
+
+	var reqBody []byte
+
+	if req.Body != nil {
+		reqBody, _ = ioutil.ReadAll(req.Body)
+	}
+
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(reqBody))
+	rsp, err := http.DefaultTransport.RoundTrip(req)
+
+	if err != nil {
+		return rsp, err
+	}
+
+	var rspBody []byte
+
+	if rsp.Body != nil {
+		rspBody, err = ioutil.ReadAll(rsp.Body)
+
+		if err != nil {
+			return rsp, err
+		}
+	}
+
+	rsp.Body = ioutil.NopCloser(bytes.NewBuffer(rspBody))
+
+	req.Header.Set(pkg.HeaderXPostmarkServerToken, "*****")
+
+	zap.L().Info(
+		req.URL.Path,
+		zap.Any("request_headers", req.Header),
+		zap.ByteString("request_body", reqBody),
+		zap.Int("response_status", rsp.StatusCode),
+		zap.Any("response_headers", rsp.Header),
+		zap.ByteString("response_body", rspBody),
+	)
+
+	return rsp, err
 }
