@@ -13,3 +13,5 @@ require (
 	go.uber.org/zap v1.10.0
 	gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20190719062839-9858d727f3ef
 )
+
+replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
