@@ -116,20 +116,6 @@ func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_Ok() {
 	assert.NoError(suite.T(), err)
 }
 
-func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_CreatingHttpRequestError() {
-	payload := &pkg.Payload{
-		TemplateAlias: "template1",
-		TemplateModel: map[string]string{"param1": "value1"},
-	}
-
-	suite.app.cfg.PostmarkApiUrl = "\n"
-
-	err := suite.app.emailProcess(payload, amqp.Delivery{})
-	assert.Error(suite.T(), err)
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Creating http request failed", messages[0].Message)
-}
-
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_SendEmailFailedError() {
 	payload := &pkg.Payload{
 		TemplateAlias: "template1",

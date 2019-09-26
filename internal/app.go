@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/golang/protobuf/jsonpb"
+	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
@@ -156,7 +158,22 @@ func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) erro
 }
 
 func (app *Application) sendEmail(payload *pkg.Payload) error {
-	b, err := json.Marshal(payload)
+	if len(payload.TemplateModel) > 0 {
+		if payload.TemplateObjectModel == nil {
+			payload.TemplateObjectModel = &structpb.Struct{
+				Fields: map[string]*structpb.Value{},
+			}
+		}
+		for key, item := range payload.TemplateModel {
+			payload.TemplateObjectModel.Fields[key] = &structpb.Value{
+				Kind: &structpb.Value_StringValue{StringValue: item},
+			}
+		}
+	}
+
+	march := &jsonpb.Marshaler{ }
+	var buf bytes.Buffer
+	err := march.Marshal(&buf, payload)
 
 	if err != nil {
 		zap.L().Error(
@@ -168,7 +185,7 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, app.cfg.PostmarkApiUrl, bytes.NewBuffer(b))
+	req, err := http.NewRequest(http.MethodPost, app.cfg.PostmarkApiUrl, &buf)
 
 	if err != nil {
 		zap.L().Error(
@@ -196,7 +213,7 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 		return err
 	}
 
-	b, err = ioutil.ReadAll(rsp.Body)
+	b, err := ioutil.ReadAll(rsp.Body)
 	_ = rsp.Body.Close()
 
 	if err != nil {
