@@ -1,5 +1,5 @@
 syntax = "proto3";
-option go_package = "github.com/paysuper/postmark-sender/pkg";
+
 package pkg;
 
 import "google/protobuf/struct.proto";
@@ -21,36 +21,36 @@ message PayloadAttachment {
 }
 
 message Payload {
-    //@inject_tag: protobuf:"varint,1,opt,name=template_id,json=TemplateId,proto3"
+    //@inject_tag: json:"TemplateId,omitempty"
     int32 template_id = 1;
-    //@inject_tag: `protobuf:"bytes,2,opt,name=template_alias,json=TemplateAlias,proto3"
+    //@inject_tag: json:"TemplateAlias,omitempty"
     string template_alias = 2;
-    //@inject_tag: protobuf:"bytes,3,rep,name=template_model,json=DEPRECATED,proto3" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"
+    //@inject_tag: json:"-"
     map<string, string> template_model = 3;
-    //@inject_tag: protobuf:"varint,4,opt,name=inline_css,json=InlineCss,proto3"
+    //@inject_tag: json:"InlineCss,omitempty"
     bool inline_css = 4;
-    //@inject_tag: protobuf:"bytes,5,opt,name=from,json=From,proto3"
+    //@inject_tag: json:"From,omitempty"
     string from = 5;
-    //@inject_tag: protobuf:"bytes,6,opt,name=to,json=To,proto3"
+    //@inject_tag: json:"To,omitempty"
     string to = 6;
-    //@inject_tag: protobuf:"bytes,7,opt,name=cc,json=Cc,proto3"
+    //@inject_tag: json:"Cc,omitempty"
     string cc = 7;
-    //@inject_tag: protobuf:"bytes,8,opt,name=bcc,json=Bcc,proto3"
+    //@inject_tag: json:"Bcc,omitempty"
     string bcc = 8;
-    //@inject_tag: protobuf:"bytes,9,opt,name=tag,json=Tag,proto3"
+    //@inject_tag: json:"Tag,omitempty"
     string tag = 9;
-    //@inject_tag: protobuf:"bytes,10,opt,name=reply_to,json=ReplyTo,proto3"
+    //@inject_tag: json:"ReplyTo,omitempty"
     string reply_to = 10;
-    //@inject_tag: protobuf:"bytes,11,rep,name=headers,json=PayloadHeader,proto3"
+    //@inject_tag: json:"Headers,omitempty"
     repeated PayloadHeader headers = 11;
-    //@inject_tag: protobuf:"varint,12,opt,name=track_opens,json=TrackOpens,proto3"
+    //@inject_tag: json:"TrackOpens,omitempty"
     bool track_opens = 12;
-    //@inject_tag: protobuf:"bytes,13,opt,name=track_links,json=TrackLinks,proto3"
+    //@inject_tag: json:"TrackLinks,omitempty"
     string track_links = 13;
-    //@inject_tag: protobuf:"bytes,14,rep,name=Attachments,json=PayloadAttachment,proto3"
+    //@inject_tag: json:"Attachments,omitempty"
     repeated PayloadAttachment attachments = 14;
-    //@inject_tag: protobuf:"bytes,15,rep,name=metadata,json=Metadata,proto3" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"
+    //@inject_tag: json:"Metadata,omitempty"
     map<string, string> metadata = 15;
-    //@inject_tag: protobuf:"bytes,16,opt,name=template_object_model,json=TemplateModel,proto3"
+    //@inject_tag: json:"TemplateModel,omitempty"
     google.protobuf.Struct template_object_model = 16;
 }
