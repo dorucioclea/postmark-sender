@@ -19,23 +19,6 @@ PaySuper Postmark Sender is a RabbitMQ consumer to send emails using the [Postma
 
 ## Usage
 
-The application handles all configuration from the environment variables.
-
-### Environment variables:
-
-| Name                            | Required | Default                                        | Description                                                                                                                             |
-|:--------------------------------|:--------:|:-----------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
-| BROKER_ADDRESS                  | -        | amqp://127.0.0.1:5672                          | The RabbitMQ URL address.                                                                                                                    |
-| POSTMARK_API_URL                | -        | https://api.postmarkapp.com/email/withTemplate | The Postmark API URL.                                                                                                                        |
-| POSTMARK_API_TOKEN              | true     | -                                              | The Postmark API security token.                                                                                                             |
-| POSTMARK_EMAIL_FROM             | true     | -                                              | The sender email to send emails to users.                                                                                                    |
-| POSTMARK_EMAIL_CC               | -        | ""                                             | The CC recipient email address. Multiple addresses are comma separated. Max 50.                                                              |
-| POSTMARK_EMAIL_BCC              | -        | ""                                             | The BCC recipient email address. Multiple addresses are comma separated. Max 50.                                                             |
-| POSTMARK_EMAIL_TRACK_OPENS      | -        | false                                          | Activate the open tracking for all emails.                                                                                                   |
-| POSTMARK_EMAIL_TRACK_LINKS      | -        | ""                                             | Activate the link tracking for links in the HTML or Text bodies of this email. Possible options: None, HtmlAndText, HtmlOnly, TextOnly.      |
-
-## Usage example:
-
 ```go
 package main
 
@@ -66,6 +49,22 @@ func main()  {
     }
 }
 ```
+
+### Environment variables:
+
+The application handles all configuration from the environment variables.
+
+| Name                            | Required | Default                                        | Description                                                                                                                             |
+|:--------------------------------|:--------:|:-----------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
+| BROKER_ADDRESS                  | -        | amqp://127.0.0.1:5672                          | The RabbitMQ URL address.                                                                                                                    |
+| POSTMARK_API_URL                | -        | https://api.postmarkapp.com/email/withTemplate | The Postmark API URL.                                                                                                                        |
+| POSTMARK_API_TOKEN              | true     | -                                              | The Postmark API security token.                                                                                                             |
+| POSTMARK_EMAIL_FROM             | true     | -                                              | The sender email to send emails to users.                                                                                                    |
+| POSTMARK_EMAIL_CC               | -        | ""                                             | The CC recipient email address. Multiple addresses are comma separated. Max 50.                                                              |
+| POSTMARK_EMAIL_BCC              | -        | ""                                             | The BCC recipient email address. Multiple addresses are comma separated. Max 50.                                                             |
+| POSTMARK_EMAIL_TRACK_OPENS      | -        | false                                          | Activate the open tracking for all emails.                                                                                                   |
+| POSTMARK_EMAIL_TRACK_LINKS      | -        | ""                                             | Activate the link tracking for links in the HTML or Text bodies of this email. Possible options: None, HtmlAndText, HtmlOnly, TextOnly.      |
+
 
 ## Contributing, Feature Requests and Support
 
