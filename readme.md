@@ -2,8 +2,8 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/paysuper/postmark-sender/issues)
-[![Build Status](https://travis-ci.org/paysuper/postmark-sender.svg?branch=master)](https://travis-ci.org/paysuper/postmark-sender) 
-[![codecov](https://codecov.io/gh/paysuper/postmark-sender/branch/master/graph/badge.svg)](https://codecov.io/gh/paysuper/postmark-sender)
+[![Build Status](https://travis-ci.com/paysuper/postmark-sender.svg?branch=develop)](https://travis-ci.com/paysuper/postmark-sender) 
+[![codecov](https://codecov.io/gh/paysuper/postmark-sender/branch/develop/graph/badge.svg)](https://codecov.io/gh/paysuper/postmark-sender)
 [![Go Report Card](https://goreportcard.com/badge/github.com/paysuper/postmark-sender)](https://goreportcard.com/report/github.com/paysuper/postmark-sender)
 
 PaySuper Postmark Sender is a RabbitMQ consumer to send emails using the [Postmark Service](https://postmarkapp.com).
