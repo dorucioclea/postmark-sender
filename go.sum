@@ -623,6 +623,8 @@ github.com/paysuper/paysuper-billing-server v0.0.0-20190718140429-61b1e4ab607d h
 github.com/paysuper/paysuper-billing-server v0.0.0-20190718140429-61b1e4ab607d/go.mod h1:OLhUt2Rfz+EAdMVcchKDL4MARIKULlijw//jinpaM8M=
 github.com/paysuper/paysuper-currencies v0.0.0-20190524103445-940bc8855c5c/go.mod h1:3iZFbAE0u2J24oKXhxTN+NgAHjJS2l3E/veHv7Oapz0=
 github.com/paysuper/paysuper-database-mongo v0.1.0/go.mod h1:IZu996j//Qoq+uzzCBL5GEYisfF4di/fwedWHlLz7sc=
+github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200113130036-a29295b4b67a h1:bg0qSc6XWjcYOxaF3j9j9EVjeqoX0yDlOfCJMgAzD3g=
+github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200113130036-a29295b4b67a/go.mod h1:mPMygCOElvGubbOMHHDA4dq15H1X9cn8cVd2SASNSl8=
 github.com/paysuper/paysuper-recurring-repository v1.0.104/go.mod h1:FyZzueaAoG6apdmfjz7BQd5QMgV3KRIGgFhRXHEIpro=
 github.com/paysuper/paysuper-recurring-repository v1.0.107/go.mod h1:CKej9aphKnx9eQE6cirz1B1UhGwRBjv+nGl0NeciFxc=
 github.com/paysuper/paysuper-recurring-repository v1.0.111 h1:YSg8Rvp7p1Nd0baEaG+XpcFCtnUE9rlYR1HdS1toZqQ=

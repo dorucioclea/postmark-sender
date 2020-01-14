@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/golang/protobuf/jsonpb"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/paysuper/paysuper-proto/go/postmarkpb"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
@@ -133,7 +134,7 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) error {
+func (app *Application) emailProcess(payload *postmarkpb.Payload, d amqp.Delivery) error {
 	if payload.From == "" {
 		payload.From = app.cfg.PostmarkEmailFrom
 	}
@@ -157,7 +158,7 @@ func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) erro
 	return app.sendEmail(payload)
 }
 
-func (app *Application) sendEmail(payload *pkg.Payload) error {
+func (app *Application) sendEmail(payload *postmarkpb.Payload) error {
 	if len(payload.TemplateModel) > 0 {
 		if payload.TemplateObjectModel == nil {
 			payload.TemplateObjectModel = &structpb.Struct{
@@ -171,7 +172,7 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 		}
 	}
 
-	march := &jsonpb.Marshaler{ }
+	march := &jsonpb.Marshaler{}
 	var buf bytes.Buffer
 	err := march.Marshal(&buf, payload)
 
