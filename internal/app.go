@@ -55,7 +55,14 @@ func NewApplication() *Application {
 
 	app.initLogger()
 	app.initConfig()
-	app.initBroker()
+
+	if err := app.initBroker(); err != nil {
+		app.fatalFn(
+			"RabbitMq broker failed",
+			zap.Error(err),
+			zap.String("url", app.cfg.BrokerAddress),
+		)
+	}
 
 	app.httpClient = NewHttpClient()
 
@@ -93,18 +100,14 @@ func (app *Application) initConfig() {
 	zap.L().Info("Configuration parsed successfully...")
 }
 
-func (app *Application) initBroker() {
+func (app *Application) initBroker() error {
 	var err error
 
 	if app.broker == nil {
 		app.broker, err = rabbitmq.NewBroker(app.cfg.BrokerAddress)
 
 		if err != nil {
-			app.fatalFn(
-				"Creating RabbitMq broker failed",
-				zap.Error(err),
-				zap.String("url", app.cfg.BrokerAddress),
-			)
+			return err
 		}
 	}
 
@@ -112,18 +115,23 @@ func (app *Application) initBroker() {
 	err = app.broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailProcess)
 
 	if err != nil {
-		app.fatalFn("Registration RabbitMQ broker handler failed", zap.Error(err))
+		return err
 	}
 
 	zap.L().Info("Broker created...")
+
+	return nil
 }
 
-func (app *Application) Run() {
+func (app *Application) Run() error {
 	zap.L().Info("Application started...")
 
 	if err := app.broker.Subscribe(nil); err != nil {
-		app.fatalFn("Application subscriber start failed...", zap.Error(err))
+		zap.L().Error("Application subscriber start failed...", zap.Error(err))
+		return err
 	}
+
+	return nil
 }
 
 func (app *Application) Stop() {
