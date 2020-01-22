@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200113130036-a29295b4b67a
+	github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200122152034-6d6bb19abebf
 	github.com/paysuper/paysuper-tools v0.0.0-20200116214558-6afcd9131e1c
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/objx v0.2.0 // indirect
