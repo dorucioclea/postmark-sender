@@ -142,7 +142,7 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) emailProcess(payload *postmarkpb.Payload, d amqp.Delivery) error {
+func (app *Application) emailProcess(payload *postmarkpb.Payload, _ amqp.Delivery) error {
 	if payload.From == "" {
 		payload.From = app.cfg.PostmarkEmailFrom
 	}
@@ -297,11 +297,11 @@ func (t *postmarkHttpTransport) RoundTrip(req *http.Request) (*http.Response, er
 	req.Header.Set(pkg.HeaderXPostmarkServerToken, "*****")
 
 	unMarshaller := new(jsonpb.Unmarshaler)
-	reqPayload := new(pkg.Payload)
+	reqPayload := new(postmarkpb.Payload)
 	err = unMarshaller.Unmarshal(bytes.NewReader(reqBody), reqPayload)
 
 	if err == nil {
-		for k, _ := range reqPayload.Attachments {
+		for k := range reqPayload.Attachments {
 			reqPayload.Attachments[k].Content = "*****"
 		}
 

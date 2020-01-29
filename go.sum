@@ -23,6 +23,8 @@ github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200113130036-a29295b4b
 github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200113130036-a29295b4b67a/go.mod h1:mPMygCOElvGubbOMHHDA4dq15H1X9cn8cVd2SASNSl8=
 github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200122152034-6d6bb19abebf h1:vrQNlmErVa3T9PsYbhjgxX9q3x1R+274LHRj2Iq2t70=
 github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200122152034-6d6bb19abebf/go.mod h1:yVmBUkR8sxQhUgU4mvO10u4x6bwlIGPoY9M++Wlnv9Q=
+github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200128100521-6735e6aec590 h1:DKWQuvvhm5d2XV4i8UWj0Gt2aqI4hP7v2LjcvKMXSQs=
+github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200128100521-6735e6aec590/go.mod h1:yVmBUkR8sxQhUgU4mvO10u4x6bwlIGPoY9M++Wlnv9Q=
 github.com/paysuper/paysuper-tools v0.0.0-20200116214558-6afcd9131e1c h1:Sethl1l+w6FYlaoq12i2iYS0MB4j/KzZTzZcEvU459E=
 github.com/paysuper/paysuper-tools v0.0.0-20200116214558-6afcd9131e1c/go.mod h1:/5apnTovClItkO1uY7kyk1834yp/IXsGk6Syyg9dVMk=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -77,6 +79,8 @@ gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20190719062839-9858d727f3ef h1:yksV6h53P
 gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20190719062839-9858d727f3ef/go.mod h1:rD6KjYTsLgxc51iWPhuInSeZ1HyrNdE/sxco/tz/sXs=
 gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200116200701-a0ee45ca2778 h1:eA1tfs8zrbeLbRN+/7vFdT7Y0vgUOviPClUOV+3NbYw=
 gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200116200701-a0ee45ca2778/go.mod h1:rD6KjYTsLgxc51iWPhuInSeZ1HyrNdE/sxco/tz/sXs=
+gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200122145003-978096b4c3e5 h1:GcQdvrlHYg3ZV1MtaU+NVqZO0N+tTiXRJrR5gHd8Pto=
+gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200122145003-978096b4c3e5/go.mod h1:rD6KjYTsLgxc51iWPhuInSeZ1HyrNdE/sxco/tz/sXs=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

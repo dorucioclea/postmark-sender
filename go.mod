@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200122152034-6d6bb19abebf
+	github.com/paysuper/paysuper-proto/go/postmarkpb v0.0.0-20200128100521-6735e6aec590
 	github.com/paysuper/paysuper-tools v0.0.0-20200116214558-6afcd9131e1c
 	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	github.com/stretchr/objx v0.2.0 // indirect
@@ -18,6 +18,6 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20190924154521-2837fb4f24fe // indirect
 	golang.org/x/text v0.3.2 // indirect
-	gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200116200701-a0ee45ca2778
+	gopkg.in/ProtocolONE/rabbitmq.v1 v1.0.0-20200122145003-978096b4c3e5
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
