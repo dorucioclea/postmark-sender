@@ -171,7 +171,7 @@ func (app *Application) sendEmail(payload *pkg.Payload) error {
 		}
 	}
 
-	march := &jsonpb.Marshaler{ }
+	march := &jsonpb.Marshaler{}
 	var buf bytes.Buffer
 	err := march.Marshal(&buf, payload)
 
@@ -286,6 +286,24 @@ func (t *postmarkHttpTransport) RoundTrip(req *http.Request) (*http.Response, er
 	rsp.Body = ioutil.NopCloser(bytes.NewBuffer(rspBody))
 
 	req.Header.Set(pkg.HeaderXPostmarkServerToken, "*****")
+
+	unMarshaller := new(jsonpb.Unmarshaler)
+	reqPayload := new(pkg.Payload)
+	err = unMarshaller.Unmarshal(bytes.NewReader(reqBody), reqPayload)
+
+	if err == nil {
+		for k, _ := range reqPayload.Attachments {
+			reqPayload.Attachments[k].Content = "*****"
+		}
+
+		marshaller := new(jsonpb.Marshaler)
+		var buf bytes.Buffer
+		err = marshaller.Marshal(&buf, reqPayload)
+
+		if err == nil {
+			reqBody = buf.Bytes()
+		}
+	}
 
 	zap.L().Info(
 		req.URL.Path,
