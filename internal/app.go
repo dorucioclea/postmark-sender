@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/golang/protobuf/jsonpb"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/paysuper/paysuper-proto/go/postmarkpb"
 	"github.com/paysuper/postmark-sender/internal/config"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
@@ -54,7 +55,14 @@ func NewApplication() *Application {
 
 	app.initLogger()
 	app.initConfig()
-	app.initBroker()
+
+	if err := app.initBroker(); err != nil {
+		app.fatalFn(
+			"RabbitMq broker failed",
+			zap.Error(err),
+			zap.String("url", app.cfg.BrokerAddress),
+		)
+	}
 
 	app.httpClient = NewHttpClient()
 
@@ -92,18 +100,14 @@ func (app *Application) initConfig() {
 	zap.L().Info("Configuration parsed successfully...")
 }
 
-func (app *Application) initBroker() {
+func (app *Application) initBroker() error {
 	var err error
 
 	if app.broker == nil {
 		app.broker, err = rabbitmq.NewBroker(app.cfg.BrokerAddress)
 
 		if err != nil {
-			app.fatalFn(
-				"Creating RabbitMq broker failed",
-				zap.Error(err),
-				zap.String("url", app.cfg.BrokerAddress),
-			)
+			return err
 		}
 	}
 
@@ -111,18 +115,23 @@ func (app *Application) initBroker() {
 	err = app.broker.RegisterSubscriber(pkg.PostmarkSenderTopicName, app.emailProcess)
 
 	if err != nil {
-		app.fatalFn("Registration RabbitMQ broker handler failed", zap.Error(err))
+		return err
 	}
 
 	zap.L().Info("Broker created...")
+
+	return nil
 }
 
-func (app *Application) Run() {
+func (app *Application) Run() error {
 	zap.L().Info("Application started...")
 
 	if err := app.broker.Subscribe(nil); err != nil {
-		app.fatalFn("Application subscriber start failed...", zap.Error(err))
+		zap.L().Error("Application subscriber start failed...", zap.Error(err))
+		return err
 	}
+
+	return nil
 }
 
 func (app *Application) Stop() {
@@ -133,7 +142,7 @@ func (app *Application) Stop() {
 	}
 }
 
-func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) error {
+func (app *Application) emailProcess(payload *postmarkpb.Payload, d amqp.Delivery) error {
 	if payload.From == "" {
 		payload.From = app.cfg.PostmarkEmailFrom
 	}
@@ -157,7 +166,7 @@ func (app *Application) emailProcess(payload *pkg.Payload, d amqp.Delivery) erro
 	return app.sendEmail(payload)
 }
 
-func (app *Application) sendEmail(payload *pkg.Payload) error {
+func (app *Application) sendEmail(payload *postmarkpb.Payload) error {
 	if len(payload.TemplateModel) > 0 {
 		if payload.TemplateObjectModel == nil {
 			payload.TemplateObjectModel = &structpb.Struct{

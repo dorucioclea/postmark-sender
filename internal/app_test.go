@@ -1,15 +1,16 @@
 package internal
 
 import (
-	"github.com/paysuper/postmark-sender/internal/mock"
+	"errors"
+	"github.com/paysuper/paysuper-proto/go/postmarkpb"
+	"github.com/paysuper/paysuper-tools/http/mocks"
 	"github.com/paysuper/postmark-sender/pkg"
 	"github.com/streadway/amqp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
-	"os"
+	rabbitMocks "gopkg.in/ProtocolONE/rabbitmq.v1/pkg/mocks"
 	"testing"
 )
 
@@ -24,90 +25,52 @@ func Test_Application(t *testing.T) {
 }
 
 func (suite *ApplicationTestSuite) SetupTest() {
-	suite.app = NewApplication()
-	assert.NotNil(suite.T(), suite.app)
-	assert.NotNil(suite.T(), suite.app.cfg)
-	assert.NotNil(suite.T(), suite.app.log)
-	assert.NotNil(suite.T(), suite.app.broker)
-	assert.NotNil(suite.T(), suite.app.httpClient)
+	suite.app = &Application{}
+	suite.app.initConfig()
+	suite.app.initLogger()
 
-	suite.app.broker = mock.NewBrokerMockOk()
-	suite.app.httpClient = mock.NewClientStatusOk()
-
-	var core zapcore.Core
-
-	lvl := zap.NewAtomicLevel()
-	core, suite.zapRecorder = observer.New(lvl)
-	suite.app.log = zap.New(core)
-	zap.ReplaceGlobals(suite.app.log)
+	suite.app.broker = &rabbitMocks.BrokerInterface{}
+	suite.app.httpClient = mocks.NewClientStatusOk()
 }
 
 func (suite *ApplicationTestSuite) TearDownTest() {}
 
 func (suite *ApplicationTestSuite) TestApplication_InitBroker_Ok() {
-	suite.app.initBroker()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Broker created...", messages[0].Message)
+	broker := &rabbitMocks.BrokerInterface{}
+	broker.On("SetExchangeName", pkg.PostmarkSenderTopicName).Return(nil)
+	broker.On("RegisterSubscriber", pkg.PostmarkSenderTopicName, mock.Anything).Return(nil)
+	suite.app.broker = broker
+
+	assert.NoError(suite.T(), suite.app.initBroker())
 }
 
 func (suite *ApplicationTestSuite) TestApplication_InitBroker_NewBroker_Error() {
-	suite.app.fatalFn = zap.L().Info
 	suite.app.cfg.BrokerAddress = ""
 	suite.app.broker = nil
 
-	suite.app.initBroker()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Creating RabbitMq broker failed", messages[0].Message)
+	assert.Error(suite.T(), suite.app.initBroker())
 }
 
 func (suite *ApplicationTestSuite) TestApplication_InitBroker_RegisterSubscriber_Error() {
-	suite.app.fatalFn = zap.L().Info
-	suite.app.cfg.BrokerAddress = ""
-	suite.app.broker = mock.NewBrokerMockError()
+	broker := &rabbitMocks.BrokerInterface{}
+	broker.On("SetExchangeName", pkg.PostmarkSenderTopicName).Return(nil)
+	broker.On("RegisterSubscriber", pkg.PostmarkSenderTopicName, mock.Anything).Return(errors.New("error"))
+	suite.app.broker = broker
 
-	suite.app.initBroker()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Registration RabbitMQ broker handler failed", messages[0].Message)
-}
-
-func (suite *ApplicationTestSuite) TestApplication_InitConfig_Ok() {
-	suite.app.initConfig()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Configuration parsed successfully...", messages[0].Message)
-}
-
-func (suite *ApplicationTestSuite) TestApplication_InitConfig_Error() {
-	v := os.Getenv("POSTMARK_EMAIL_FROM")
-	err := os.Unsetenv("POSTMARK_EMAIL_FROM")
-	assert.NoError(suite.T(), err)
-
-	suite.app.fatalFn = zap.L().Info
-
-	suite.app.initConfig()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Config init failed", messages[0].Message)
-
-	err = os.Setenv("POSTMARK_EMAIL_FROM", v)
-	assert.NoError(suite.T(), err)
-}
-
-func (suite *ApplicationTestSuite) TestApplication_Run_Ok() {
-	suite.app.Run()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Application started...", messages[0].Message)
+	assert.Error(suite.T(), suite.app.initBroker())
 }
 
 func (suite *ApplicationTestSuite) TestApplication_Run_Subscribe_Error() {
-	suite.app.broker = mock.NewBrokerMockError()
-	suite.app.fatalFn = zap.L().Info
+	broker := &rabbitMocks.BrokerInterface{}
+	var x chan bool
+	broker.On("Subscribe", x).Return(errors.New("error"))
+	suite.app.broker = broker
 
-	suite.app.Run()
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Application subscriber start failed...", messages[1].Message)
+	assert.Error(suite.T(), suite.app.Run())
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_Ok() {
-	payload := &pkg.Payload{
+	payload := &postmarkpb.Payload{
 		TemplateAlias: "template1",
 		TemplateModel: map[string]string{"param1": "value1"},
 	}
@@ -117,56 +80,48 @@ func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_Ok() {
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_SendEmailFailedError() {
-	payload := &pkg.Payload{
+	payload := &postmarkpb.Payload{
 		TemplateAlias: "template1",
 		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
-	suite.app.httpClient = mock.NewTransportHttpError()
+	suite.app.httpClient = mocks.NewTransportHttpError()
 
 	err := suite.app.emailProcess(payload, amqp.Delivery{})
-	assert.Error(suite.T(), err)
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Send email failed", messages[0].Message)
+	assert.Errorf(suite.T(), err, "Send email failed")
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_ReadingResponseBodyError() {
-	payload := &pkg.Payload{
+	payload := &postmarkpb.Payload{
 		TemplateAlias: "template1",
 		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
-	suite.app.httpClient = mock.NewClientStatusErrorIoReader()
+	suite.app.httpClient = mocks.NewClientStatusErrorIoReader()
 
 	err := suite.app.emailProcess(payload, amqp.Delivery{})
-	assert.Error(suite.T(), err)
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Reading response body failed", messages[0].Message)
+	assert.Errorf(suite.T(), err, "Reading response body failed")
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_IncorrectJsonResponseError() {
-	payload := &pkg.Payload{
+	payload := &postmarkpb.Payload{
 		TemplateAlias: "template1",
 		TemplateModel: map[string]string{"param1": "value1"},
 	}
-	suite.app.httpClient = mock.NewClientStatusIncorrectResponse()
+	suite.app.httpClient = mocks.NewClientStatusIncorrectResponse()
 
 	err := suite.app.emailProcess(payload, amqp.Delivery{})
-	assert.Error(suite.T(), err)
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), "Incorrect json response", messages[0].Message)
+	assert.Errorf(suite.T(), err, "Incorrect json response")
 }
 
 func (suite *ApplicationTestSuite) TestApplication_EmailConfirmProcess_BadResponseStatusError() {
-	payload := &pkg.Payload{
+	payload := &postmarkpb.Payload{
 		TemplateAlias: "template1",
 		TemplateModel: map[string]string{"param1": "value1"},
 	}
 
-	suite.app.httpClient = mock.NewClientStatusBadStatus()
+	suite.app.httpClient = mocks.NewClientStatusBadStatus()
 
 	err := suite.app.emailProcess(payload, amqp.Delivery{})
-	assert.Error(suite.T(), err)
-	messages := suite.zapRecorder.All()
-	assert.Equal(suite.T(), errorBadResponse, messages[0].Message)
+	assert.Errorf(suite.T(), err, errorBadResponse)
 }

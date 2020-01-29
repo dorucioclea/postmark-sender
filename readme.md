@@ -23,7 +23,8 @@ PaySuper Postmark Sender is a RabbitMQ consumer to send emails using the [Postma
 package main
 
 import (
-    postmarkSdrPkg "github.com/paysuper/postmark-sender/pkg"
+    postmarkPb "github.com/paysuper/paysuper-proto/go/postmarkpb"
+    postmarkPkg "github.com/paysuper/postmark-sender/pkg"
     "github.com/streadway/amqp"
     "gopkg.in/ProtocolONE/rabbitmq.v1/pkg"
     "log"
@@ -36,13 +37,13 @@ func main()  {
         log.Fatalf("Creating RabbitMQ publisher failed with error: %s\n", err)
     }
     
-    payload := &postmarkSdrPkg.Payload{
+    payload := &postmarkPb.Payload{
         TemplateAlias: "template_name",
         TemplateModel: map[string]string{"param1": "value1"},
         To:            "emai@test.com",
     }
     
-    err = broker.Publish(postmarkSdrPkg.PostmarkSenderTopicName, payload, amqp.Table{})
+    err = broker.Publish(postmarkPkg.PostmarkSenderTopicName, payload, amqp.Table{})
     
     if err != nil {
         log.Fatalf("Publication message to queue failed with error: %s\n", err)
